@@ -23,7 +23,6 @@ function updateHtmlOutput() {
   const programCaptura3 = formData.get('program-captura-3');
   const programEnlace = formData.get('program-enlace');
   const programEnlacePremium = formData.get('program-enlace-premium');
-  const softwareTitle = formData.get('software-title');
   const softwareVersion = formData.get('software-version');
   const softwareSize = formData.get('software-size');
   const softwareMedicine = formData.get('software-medicine');
@@ -184,7 +183,7 @@ function updateHtmlOutput() {
           <h2>Descripcion del Software</h2>
           <p style="COLOR: BLACK;text-align: center;">${programDescription}</p>
           <h2>Datos del Software</h2>
-          <p style="text-align: center;color: black;">Titulo: <strong>${softwareTitle}</strong><br> Versión: ${softwareVersion} <br> Tamaño: ${softwareSize} <br> Medicina: ${softwareMedicine} <br> Idioma: ${softwareLanguage} <br> Fecha de Actualización: ${softwareUpdateDate} <br> Sistema Operativo: ${softwareOs} </p>
+          <p style="text-align: center;color: black;">Titulo: <strong>${programName}</strong><br> Versión: ${softwareVersion} <br> Tamaño: ${softwareSize} <br> Medicina: ${softwareMedicine} <br> Idioma: ${softwareLanguage} <br> Fecha de Actualización: ${softwareUpdateDate} <br> Sistema Operativo: ${softwareOs} </p>
         </section>
         <br>
         <section class="game-images">
