@@ -24,7 +24,13 @@ function updateHtmlOutput() {
   const gameEnlace = formData.get('game-enlace');
   const gameEnlacePremium = formData.get('game-enlace-premium');
   const gameDatos = formData.get('game-datos');
-
+  const gameTitle = formData.get('game-title');
+  const gameVersion = formData.get('game-version');
+  const gameSize = formData.get('game-size');
+  const gameFormat = formData.get('game-format');
+  const gameLanguage = formData.get('game-language')
+  const gameUpdateDate = formData.get('game-update-date');
+  const gameOs = formData.get('game-os')
 
   const html = `
   <!DOCTYPE html>
@@ -180,6 +186,8 @@ function updateHtmlOutput() {
           <p style="COLOR: BLACK;text-align: center;">${gameDescription}</p>
           <section class="game-info">
           <h2>Datos del Juego</h2>
+          <p style="text-align: center;color: black;">Titulo: <strong>${gameTitle}</strong><br> Versión: ${gameVersion} <br> Tamaño: ${gameSize} <br> Formato: ${gameFormat} <br> Idiomas y voces: ${gameLanguage} <br> Fecha de Lanzamiento: ${gameUpdateDate} <br> Sistema Operativo: ${gameOs} </p>
+
           <ul style="COLOR: BLACK;text-align: center;">
           ${gameDatos.split("\n").map((line) => `<li>${line}</li>`).join("")}
           </ul>
