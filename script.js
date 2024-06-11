@@ -12,7 +12,6 @@ function generateHtml() {
   copyButton.style.display = 'block';
 }
 
-// Define the updateHtmlOutput function
 function updateHtmlOutput() {
   const form = document.getElementById('program-form');
   const formData = new FormData(form);
@@ -24,13 +23,20 @@ function updateHtmlOutput() {
   const programCaptura3 = formData.get('program-captura-3');
   const programEnlace = formData.get('program-enlace');
   const programEnlacePremium = formData.get('program-enlace-premium');
+  const softwareTitle = formData.get('software-title');
+  const softwareVersion = formData.get('software-version');
+  const softwareSize = formData.get('software-size');
+  const softwareMedicine = formData.get('software-medicine');
+  const softwareLanguage = formData.get('software-language');
+  const softwareUpdateDate = formData.get('software-update-date');
+  const softwareOs = formData.get('software-os');
 
   const html = `
   <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portada del Juego</title>
     <style>
         body {
@@ -178,7 +184,7 @@ function updateHtmlOutput() {
           <h2>Descripcion del Software</h2>
           <p style="COLOR: BLACK;text-align: center;">${programDescription}</p>
           <h2>Datos del Software</h2>
-          <p style="text-align: center;color: black;">Titulo: <strong>${programName}</strong><br> Versión:${softwareVersion} <br> Tamaño:${softwareSize} <br> Medicina:${softwareMedicine} <br> Idioma:${softwareLanguage} <br> Fecha de Actualización:${softwareUpdateDate} <br> Sistema Operativo:${softwareOs} </p>
+          <p style="text-align: center;color: black;">Titulo: <strong>${softwareTitle}</strong><br> Versión:${softwareVersion} <br> Tamaño:${softwareSize} <br> Medicina:${softwareMedicine} <br> Idioma:${softwareLanguage} <br> Fecha de Actualización:${softwareUpdateDate} <br> Sistema Operativo:${softwareOs} </p>
         </section>
         <br>
         <section class="game-images">
