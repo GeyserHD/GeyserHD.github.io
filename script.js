@@ -184,7 +184,7 @@ function updateHtmlOutput() {
           <h2>Descripcion del Software</h2>
           <p style="COLOR: BLACK;text-align: center;">${programDescription}</p>
           <h2>Datos del Software</h2>
-          <p style="text-align: center;color: black;">Titulo: <strong>${softwareTitle}</strong><br> Versión:${softwareVersion} <br> Tamaño:${softwareSize} <br> Medicina:${softwareMedicine} <br> Idioma:${softwareLanguage} <br> Fecha de Actualización:${softwareUpdateDate} <br> Sistema Operativo:${softwareOs} </p>
+          <p style="text-align: center;color: black;">Titulo: <strong>${softwareTitle}</strong><br> Versión: ${softwareVersion} <br> Tamaño: ${softwareSize} <br> Medicina: ${softwareMedicine} <br> Idioma: ${softwareLanguage} <br> Fecha de Actualización: ${softwareUpdateDate} <br> Sistema Operativo: ${softwareOs} </p>
         </section>
         <br>
         <section class="game-images">
