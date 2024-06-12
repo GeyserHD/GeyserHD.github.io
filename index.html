@@ -14,3 +14,97 @@
   <button id="program-button" onclick="location.href='program/program.html'">Generar HTML para Programas</button>
 </body>
 </html>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de películas en tiempo real</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+       .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+       .search-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 18px;
+            border: 1px solid #ccc;
+        }
+       .movie-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+       .movie-list li {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+       .movie-list li:hover {
+            background-color: #f0f0f0;
+        }
+       .movie-poster {
+            width: 50px;
+            height: 75px;
+            margin: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Buscador de películas en tiempo real</h1>
+        <input type="text" id="search-input" class="search-input" placeholder="Buscar película...">
+        <ul id="movie-list" class="movie-list"></ul>
+    </div>
+
+    <script>
+        const apiKey = '611a7ebbc7346b4081d81ae8b098a86f';
+        const searchInput = document.getElementById('search-input');
+        const movieList = document.getElementById('movie-list');
+
+        searchInput.addEventListener('input', searchMovies);
+
+        function searchMovies() {
+            const searchTerm = searchInput.value.trim();
+            if (searchTerm) {
+                fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${searchTerm}`)
+                   .then(response => response.json())
+                   .then(data => {
+                        const movies = data.results;
+                        movieList.innerHTML = '';
+                        movies.forEach(movie => {
+                            const movieListItem = document.createElement('li');
+                            movieListItem.innerHTML = `
+                                <img src="https://image.tmdb.org/t/p/w45${movie.poster_path}" alt="Poster de la película">
+                                <span>${movie.title} (ID: ${movie.id})</span>
+                                <button class="btn btn-primary btn-sm" onclick="copyId(${movie.id})">Copiar ID</button>
+                            `;
+                            movieList.appendChild(movieListItem);
+                        });
+                    })
+                   .catch(error => console.error(error));
+            }
+        }
+
+        function copyId(id) {
+            const textarea = document.createElement('textarea');
+            textarea.value = id;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            alert(`ID copiado: ${id}`);
+        }
+    </script>
+</body>
+</html>
