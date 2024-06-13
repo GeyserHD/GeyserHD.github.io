@@ -57,15 +57,19 @@
   <input type="url" id="game-captura-3" name="game-captura-3"><br><br>
 
 <!-- Sección para acortar enlaces -->
- <h2>Acortar Enlaces</h2>
+<h2>Acortar Enlaces</h2>
 <div class="input-group mb-3">
   <input type="url" id="enlace-original" class="form-control">
   <div class="input-group-append">
+    <select id="selector-acortador" class="custom-select">
+      <option value="shrinkme">Shrinkme.io</option>
+      <option value="cuty">Cuty.io</option>
+    </select>
     <button class="btn btn-primary" id="acortar-enlace">Acortar</button>
     <button class="btn btn-secondary" id="copiar-enlace">Copiar</button>
   </div>
 </div>
-
+</div>
 <!--enlaces-->
 <label for="game-enlace">Enlace de descarga:</label>
 <input type="url" id="game-enlace" name="game-enlace"><br><br>
@@ -81,6 +85,7 @@
 <div id="html-preview"></div>
 <!-- Div para mostrar el HTML generado -->
 <div id="html-output"></div>
+
 <!-- Script de JavaScript -->
 <script src="game.js"></script>
 </form>
