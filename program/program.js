@@ -42,6 +42,7 @@ function updateHtmlOutput() {
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f2f5;
+            margin: 0;
             padding: 0;
         }
         .game-container {
@@ -249,18 +250,30 @@ document.getElementById('generate-html').addEventListener('click', generateHtml)
 copyButton.addEventListener('click', copyHtml);
 
 //acortador
-const apiKey = '78a91cfc47f6a3478f1997120a950007b9f0176a';
-  const apiUrl = `https://shrinkme.io/api?api=${apiKey}&format=text&url=`;
+const apiKeyCuty = 'a1e38299b3fa636349c7874a9';
+  const apiKeyShrinkme = '78a91cfc47f6a3478f1997120a950007b9f0176a';
+  const apiUrlShrinkme = `https://shrinkme.io/api?api=${apiKeyShrinkme}&format=text&url=`;
+  const apiUrlCuty = `https://api.cuty.io/quick?token=${apiKeyCuty}&format=text&url=`;
+
 
   document.getElementById('acortar-enlace').addEventListener('click', (e) => {
     e.preventDefault(); // Evitamos que la página se recargue
     const enlaceOriginal = document.getElementById('enlace-original').value;
+    const acortadorSeleccionado = document.getElementById('selector-acortador').value;
+    let apiUrl;
+
+    if (acortadorSeleccionado === 'hrinkme') {
+      apiUrl = apiUrlShrinkme;
+    } else if (acortadorSeleccionado === 'cuty') {
+      apiUrl = apiUrlCuty;
+    }
+
     fetch(apiUrl + encodeURIComponent(enlaceOriginal))
-   .then(response => response.text())
-   .then(data => {
+     .then(response => response.text())
+     .then(data => {
         document.getElementById('enlace-original').value = data;
       })
-   .catch(error => console.error('Error al acortar enlace:', error));
+     .catch(error => console.error('Error al acortar enlace:', error));
   });
 
   document.getElementById('copiar-enlace').addEventListener('click', (e) => {
