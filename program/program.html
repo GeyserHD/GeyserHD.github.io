@@ -56,6 +56,10 @@
 <div class="input-group mb-3">
   <input type="url" id="enlace-original" class="form-control">
   <div class="input-group-append">
+    <select id="selector-acortador" class="custom-select">
+      <option value="shrinkme">Shrinkme.io</option>
+      <option value="cuty">Cuty.io</option>
+    </select>
     <button class="btn btn-primary" id="acortar-enlace">Acortar</button>
     <button class="btn btn-secondary" id="copiar-enlace">Copiar</button>
   </div>
@@ -65,20 +69,20 @@
   
 </script>
 <!--enlaces-->
-<label for="program-enlace">Enlace de descarga:</label>
-<input type="url" id="program-enlace" name="program-enlace"><br><br>
+<label for="game-enlace">Enlace de descarga:</label>
+<input type="url" id="game-enlace">
 
-  <label for="program-enlace-premium">Enlace de descarga premium:</label>
-  <input type="url" id="program-enlace-premium" name="program-enlace-premium"><br><br>
+  <label for="game-enlace-premium">Enlace de descarga premium:</label>
+  <input type="url" id="game-enlace-premium" name="game-enlace-premium"><br><br>
 </form>
 <!-- Botones -->
  <center>
 <button class="btn btn-primary"  id="generate-html">Generar HTML</button>
 <button class="btn btn-secondary" id="copy-button">Copiar</button>
-  </center>
 <div id="html-preview"></div>
 <!-- Div para mostrar el HTML generado -->
 <div id="html-output"></div>
+</center>
 <!-- Script de JavaScript -->
 <script src="program.js"></script>
 </form>
