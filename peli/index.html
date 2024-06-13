@@ -51,7 +51,7 @@
     </div>
 
     <script>
-        const apiKey = '611a7ebbc7346b4081d81ae8b098a86f';
+const apiKey = '611a7ebbc7346b4081d81ae8b098a86f';
 const searchInput = document.getElementById('search-input');
 const movieList = document.getElementById('movie-list');
 
@@ -61,8 +61,8 @@ function searchMovies() {
     const searchTerm = searchInput.value.trim();
     if (searchTerm) {
         fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${searchTerm}`)
-            .then(response => response.json())
-            .then(data => {
+           .then(response => response.json())
+           .then(data => {
                 const results = data.results;
                 movieList.innerHTML = '';
                 results.forEach(result => {
@@ -74,15 +74,15 @@ function searchMovies() {
 
                     const movieListItem = document.createElement('li');
                     movieListItem.innerHTML = `
-                        <img src="https://image.tmdb.org/t/p/w45${posterPath}" alt="Poster de la ${mediaType === 'movie' ? 'película' : 'serie'}">
+                        <img src="https://image.tmdb.org/t/p/w45${posterPath}" alt="Poster de la ${mediaType === 'ovie'? 'película' : 'erie'}">
                         <span>${title} (ID: ${id})</span>
                         <button class="btn btn-primary btn-sm" onclick="copyId(${id})">Copiar ID</button>
-                        <button class="btn btn-primary btn-sm" onclick="openImage('${originalImageURL}')">Ver imagen</button>
+                        <button class="btn btn-primary btn-sm" onclick="downloadImage('${originalImageURL}', '${title}')">Descargar imagen</button>
                     `;
                     movieList.appendChild(movieListItem);
                 });
             })
-            .catch(error => console.error(error));
+           .catch(error => console.error(error));
     }
 }
 
@@ -96,8 +96,15 @@ function copyId(id) {
     alert(`ID copiado: ${id}`);
 }
 
-function openImage(url) {
-    window.open(url, '_blank');
+function downloadImage(url, filename) {
+  fetch(url)
+   .then(response => response.blob())
+   .then(blob => {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${filename}.jpg`;
+      link.click();
+    });
 }
     </script>
 </body>
