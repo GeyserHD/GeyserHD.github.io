@@ -289,3 +289,33 @@ const apiKeyCuty = 'a1e38299b3fa636349c7874a9';
     navigator.clipboard.writeText(enlaceAcortado);
     alert('Enlace acortado copiado al portapapeles');
   });
+// Obtener los elementos del botón y del input
+const bitlyButton = document.getElementById('acortar-enlace-bitly');
+const bitlyInput = document.getElementById('game-enlace-bitly');
+
+// Agregar un listener de eventos al botón
+bitlyButton.addEventListener('click', async (e) => {
+  e.preventDefault();
+
+  const originalUrl = bitlyInput.value;
+
+  const response = await fetch(`https://api-ssl.bitly.com/v4/shorten`, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer 541492ac61a2782915cb75f4faaedf8b4a083bdd',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      'long_url': originalUrl,
+      'domain': 'bit.ly'
+    })
+  });
+
+  const data = await response.json();
+
+  if (data && data.link) {
+    document.getElementById('game-enlace-premium').value = data.link;
+  } else {
+    alert('Error al acortar la URL');
+  }
+});
