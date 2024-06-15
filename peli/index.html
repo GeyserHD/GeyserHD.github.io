@@ -69,15 +69,49 @@
         .input-group-append .btn-custom {
             margin-left: 5px;
         }
+        .accordion {
+    background-color: #444;
+    color: #fff;
+    cursor: pointer;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 18px;
+    transition: 0.4s;
+}
+
+.accordion:hover, .active {
+    background-color: #555;
+}
+
+.panel {
+    padding: 0 10px;
+    display: none;
+    background-color: #333;
+    overflow: hidden;
+}
+
+.panel img {
+    width: 100px;
+    height: 150px;
+    border-radius: 4px;
+}
+
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Buscador de películas en tiempo real</h1>
-        <input type="text" id="search-input" class="search-input" placeholder="Buscar película...">
+        <input type="text" id="search-input" class="search-input" placeholder="Buscar película o serie...">
+        <h2>Películas</h2>
         <ul id="movie-list" class="movie-list"></ul>
+        <h2>Series</h2>
+        <ul id="series-list" class="movie-list"></ul>
     </div>
-
+    
+    
     <div class="container mt-4">
         <h2>Acortar Enlaces</h2>
         <div class="input-group mb-3">
@@ -103,6 +137,8 @@
         <input type="text" id="bitly-enlace-acortado" class="form-control mt-2" readonly>
     </div>
     <script>
+
+        //acortador
         const apiKeyCuty = 'a1e38299b3fa636349c7874a9';
         const apiKeyShrinkme = '78a91cfc47f6a3478f1997120a950007b9f0176a';
         const apiUrlShrinkme = `https://shrinkme.io/api?api=${apiKeyShrinkme}&format=text&url=`;
@@ -135,61 +171,112 @@
             alert('Enlace acortado copiado al portapapeles');
         });
 
+        //movies-series
         const apiKey = '611a7ebbc7346b4081d81ae8b098a86f';
-        const searchInput = document.getElementById('search-input');
-        const movieList = document.getElementById('movie-list');
+const searchInput = document.getElementById('search-input');
+const movieList = document.getElementById('movie-list');
+const seriesList = document.getElementById('series-list');
 
-        searchInput.addEventListener('input', searchMovies);
+searchInput.addEventListener('input', searchMovies);
 
-        function searchMovies() {
-            const searchTerm = searchInput.value.trim();
-            if (searchTerm) {
-                fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${searchTerm}&language=es-MX`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const results = data.results;
-                        movieList.innerHTML = '';
-                        results.forEach(result => {
-                            let mediaType = result.media_type;
-                            let title = result.title || result.name;
-                            let id = result.id;
-                            let posterPath = result.poster_path;
-                            let originalImageURL = `https://image.tmdb.org/t/p/original${posterPath}`;
+function searchMovies() {
+    const searchTerm = searchInput.value.trim();
+    if (searchTerm) {
+        fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${searchTerm}&language=es-MX`)
+            .then(response => response.json())
+            .then(data => {
+                const results = data.results;
+                movieList.innerHTML = '';
+                seriesList.innerHTML = '';
 
-                            const movieListItem = document.createElement('li');
-                            movieListItem.innerHTML = `
-                                <img src="https://image.tmdb.org/t/p/w45${posterPath}" alt="Poster de la ${mediaType === 'movie' ? 'película' : 'serie'}" class="movie-poster">
-                                <span>${title} (ID: ${id})</span>
-                                <button class="btn btn-custom btn-sm" onclick="copyId(${id})">Copiar ID</button>
-                                <button class="btn btn-custom btn-sm" onclick="downloadImage('${originalImageURL}', '${title}')">Descargar imagen</button>
-                            `;
-                            movieList.appendChild(movieListItem);
-                        });
-                    })
-                    .catch(error => console.error(error));
-            }
-        }
+                results.forEach(result => {
+                    let mediaType = result.media_type;
+                    let title = result.title || result.name;
+                    let id = result.id;
+                    let posterPath = result.poster_path;
+                    let originalImageURL = `https://image.tmdb.org/t/p/original${posterPath}`;
+                    const listItem = document.createElement('li');
 
-        function copyId(id) {
-            const textarea = document.createElement('textarea');
-            textarea.value = id;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            alert(`ID copiado: ${id}`);
-        }
+                    listItem.innerHTML = `
+                        <img src="https://image.tmdb.org/t/p/w45${posterPath}" alt="Poster de ${mediaType === 'movie' ? 'la película' : 'la serie'}" class="movie-poster">
+                        <span>${title} (ID: ${id})</span>
+                        <button class="btn btn-custom btn-sm" onclick="copyId(${id})">Copiar ID</button>
+                        ${mediaType === 'tv' ? `<button class="btn btn-custom btn-sm" onclick="showSeasons(${id}, this)">Mostrar temporadas</button>` : ''}
+                    `;
 
-        function downloadImage(url, filename) {
-            fetch(url)
-                .then(response => response.blob())
-                .then(blob => {
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = `${filename}.jpg`;
-                    link.click();
+                    if (mediaType === 'movie') {
+                        movieList.appendChild(listItem);
+                    } else if (mediaType === 'tv') {
+                        seriesList.appendChild(listItem);
+                    }
                 });
-        }
+            })
+            .catch(error => console.error(error));
+    }
+}
+
+function copyId(id) {
+    const textarea = document.createElement('textarea');
+    textarea.value = id;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    alert(`ID copiado: ${id}`);
+}
+
+function downloadImage(url, filename) {
+    fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${filename}.jpg`;
+            link.click();
+        });
+}
+
+function showSeasons(seriesId, button) {
+    fetch(`https://api.themoviedb.org/3/tv/${seriesId}?api_key=${apiKey}&language=es-MX`)
+        .then(response => response.json())
+        .then(data => {
+            const seasons = data.seasons;
+            const accordion = document.createElement('div');
+
+            seasons.forEach(season => {
+                const seasonItem = document.createElement('div');
+                seasonItem.innerHTML = `
+                    <button class="accordion">${season.name}</button>
+                    <div class="panel">
+                        <img src="https://image.tmdb.org/t/p/w200${season.poster_path}" alt="Poster de la temporada">
+                    </div>
+                `;
+                accordion.appendChild(seasonItem);
+            });
+
+            const parent = button.parentElement;
+            parent.appendChild(accordion);
+            addAccordionEventListeners();
+        })
+        .catch(error => console.error(error));
+}
+
+function addAccordionEventListeners() {
+    const accordions = document.getElementsByClassName('accordion');
+    for (let i = 0; i < accordions.length; i++) {
+        accordions[i].addEventListener('click', function() {
+            this.classList.toggle('active');
+            const panel = this.nextElementSibling;
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'block';
+            }
+        });
+    }
+}
+
+//bit.ly
 
         document.getElementById('acortar-enlace-bitly').addEventListener('click', async (e) => {
             e.preventDefault();
