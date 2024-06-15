@@ -69,8 +69,8 @@
         .input-group-append .btn-custom {
             margin-left: 5px;
         }
-        .accordion {
-    background-color: #444;
+        .accordion-toggle {
+    background-color: #e74c3c;
     color: #fff;
     cursor: pointer;
     padding: 10px;
@@ -80,24 +80,65 @@
     outline: none;
     font-size: 18px;
     transition: 0.4s;
+    border-radius: 5px;
+    margin-top: 10px;
 }
 
-.accordion:hover, .active {
+.accordion-toggle:hover, .accordion-toggle.active {
+    background-color: #c0392b;
+}
+
+.accordion {
     background-color: #555;
+    color: #fff;
+    cursor: pointer;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 18px;
+    transition: 0.4s;
+    border-radius: 5px;
+    margin-top: 5px;
+}
+
+.accordion:hover, .accordion.active {
+    background-color: #777;
 }
 
 .panel {
-    padding: 0 10px;
+    padding: 10px;
     display: none;
-    background-color: #333;
+    background-color: #444;
     overflow: hidden;
+    border-radius: 5px;
+    margin-top: 5px;
 }
 
 .panel img {
     width: 100px;
     height: 150px;
     border-radius: 4px;
+    margin-right: 10px;
 }
+
+.panel-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.panel-content .info {
+    flex-grow: 1;
+}
+
+.panel-content .actions {
+    display: flex;
+    gap: 10px;
+}
+
+
 
     </style>
 </head>
@@ -201,7 +242,8 @@ function searchMovies() {
                         <img src="https://image.tmdb.org/t/p/w45${posterPath}" alt="Poster de ${mediaType === 'movie' ? 'la película' : 'la serie'}" class="movie-poster">
                         <span>${title} (ID: ${id})</span>
                         <button class="btn btn-custom btn-sm" onclick="copyId(${id})">Copiar ID</button>
-                        ${mediaType === 'tv' ? `<button class="btn btn-custom btn-sm" onclick="showSeasons(${id}, this)">Mostrar temporadas</button>` : ''}
+                        ${mediaType === 'tv' ? `<button class="btn btn-custom btn-sm" onclick="toggleSeasons(${id}, this)">Mostrar temporadas</button>` : ''}
+                        <button class="btn btn-custom btn-sm" onclick="downloadImage('${originalImageURL}', '${title}')">Descargar imagen</button>
                     `;
 
                     if (mediaType === 'movie') {
@@ -236,25 +278,50 @@ function downloadImage(url, filename) {
         });
 }
 
-function showSeasons(seriesId, button) {
+function toggleSeasons(seriesId, button) {
+    const parent = button.parentElement;
+    let accordion = parent.querySelector('.seasons-accordion');
+
+    if (!accordion) {
+        showSeasons(seriesId, parent, button);
+    } else {
+        const isVisible = Array.from(accordion.querySelectorAll('.panel')).some(panel => panel.style.display === 'block');
+        Array.from(accordion.querySelectorAll('.panel')).forEach(panel => {
+            panel.style.display = isVisible ? 'none' : 'block';
+        });
+    }
+}
+
+function showSeasons(seriesId, parent, button) {
     fetch(`https://api.themoviedb.org/3/tv/${seriesId}?api_key=${apiKey}&language=es-MX`)
         .then(response => response.json())
         .then(data => {
             const seasons = data.seasons;
             const accordion = document.createElement('div');
+            accordion.classList.add('seasons-accordion');
+
+            accordion.innerHTML = `<button class="accordion-toggle">Abrir/Cerrar todas las temporadas</button>`;
 
             seasons.forEach(season => {
                 const seasonItem = document.createElement('div');
+                const originalImageURL = `https://image.tmdb.org/t/p/original${season.poster_path}`;
                 seasonItem.innerHTML = `
                     <button class="accordion">${season.name}</button>
                     <div class="panel">
-                        <img src="https://image.tmdb.org/t/p/w200${season.poster_path}" alt="Poster de la temporada">
+                        <div class="panel-content">
+                            <img src="https://image.tmdb.org/t/p/w200${season.poster_path}" alt="Poster de la temporada">
+                            <div class="info">
+                                <p>Número de capítulos: ${season.episode_count}</p>
+                            </div>
+                            <div class="actions">
+                                <button class="btn btn-custom btn-sm" onclick="downloadImage('${originalImageURL}', '${season.name}')">Descargar imagen</button>
+                            </div>
+                        </div>
                     </div>
                 `;
                 accordion.appendChild(seasonItem);
             });
 
-            const parent = button.parentElement;
             parent.appendChild(accordion);
             addAccordionEventListeners();
         })
@@ -274,7 +341,19 @@ function addAccordionEventListeners() {
             }
         });
     }
+
+    const toggles = document.getElementsByClassName('accordion-toggle');
+    for (let i = 0; i < toggles.length; i++) {
+        toggles[i].addEventListener('click', function() {
+            const panels = this.parentElement.querySelectorAll('.panel');
+            const isVisible = Array.from(panels).some(panel => panel.style.display === 'block');
+            panels.forEach(panel => {
+                panel.style.display = isVisible ? 'none' : 'block';
+            });
+        });
+    }
 }
+
 
 //bit.ly
 
