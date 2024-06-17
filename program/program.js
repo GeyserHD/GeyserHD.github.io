@@ -42,7 +42,6 @@ function updateHtmlOutput() {
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f2f5;
-            margin: 0;
             padding: 0;
         }
         .game-container {
