@@ -355,40 +355,47 @@ function addAccordionEventListeners() {
 }
 
 
-//bit.ly
+document.getElementById('acortar-enlace-bitly').addEventListener('click', async (e) => {
+    e.preventDefault();
 
-        document.getElementById('acortar-enlace-bitly').addEventListener('click', async (e) => {
-            e.preventDefault();
+    // Obtén la URL original del campo de entrada
+    const originalUrl = document.getElementById('game-enlace-bitly').value;
+    const apiKey = 'c8dcb7591d788d183fd17612053e2f5a00357e35'; // tu clave de API
 
-            const originalUrl = document.getElementById('game-enlace-bitly').value;
-
-            const response = await fetch(`https://n9.cl/api/v1/shorten`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer c8dcb7591d788d183fd17612053e2f5a00357e35',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    'long_url': originalUrl,
-                    'domain': 'n9.cl'
-                })
-            });
-
-            const data = await response.json();
-
-            if (data && data.link) {
-                document.getElementById('bitly-enlace-acortado').value = data.link;
-            } else {
-                alert('Error al acortar la URL');
-            }
+    try {
+        const response = await fetch('https://n9.cl/api/short', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                url: originalUrl,
+                apikey: apiKey
+            })
         });
 
-        document.getElementById('copiar-enlace-bitly').addEventListener('click', (e) => {
-            e.preventDefault();
-            const enlaceAcortado = document.getElementById('bitly-enlace-acortado').value;
-            navigator.clipboard.writeText(enlaceAcortado);
-            alert('Enlace acortado copiado al portapapeles');
-        });
+        const data = await response.json();
+
+        // Manejo de la respuesta según el estado
+        if (data.status === 'OK') {
+            document.getElementById('bitly-enlace-acortado').value = data.short;
+        } else {
+            // Si hay un error, muestra un mensaje adecuado
+            alert(`Error al acortar la URL: ${data.info}`);
+        }
+    } catch (error) {
+        console.error('Error al realizar la solicitud:', error);
+        alert('Hubo un error al conectar con la API.');
+    }
+});
+
+// Función para copiar el enlace acortado al portapapeles
+document.getElementById('copiar-enlace-bitly').addEventListener('click', (e) => {
+    e.preventDefault();
+    const enlaceAcortado = document.getElementById('bitly-enlace-acortado').value;
+    navigator.clipboard.writeText(enlaceAcortado);
+    alert('Enlace acortado copiado al portapapeles');
+});
     </script>
 </body>
 </html>
