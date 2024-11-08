@@ -167,11 +167,11 @@
             </div>
         </div>
 
-        <label for="game-enlace-bitly">Enlace para acortar con bit.ly:</label>
+        <label for="game-enlace-bitly">Enlace para acortar con n9.cl:</label>
         <div class="input-group mb-3">
             <input type="url" id="game-enlace-bitly" class="form-control" placeholder="Introduce el enlace">
             <div class="input-group-append">
-                <button class="btn btn-custom" id="acortar-enlace-bitly">Acortar con bit.ly</button>
+                <button class="btn btn-custom" id="acortar-enlace-bitly">Acortar con n9.cl</button>
                 <button class="btn btn-secondary" id="copiar-enlace-bitly">Copiar</button>
             </div>
         </div>
@@ -362,15 +362,15 @@ function addAccordionEventListeners() {
 
             const originalUrl = document.getElementById('game-enlace-bitly').value;
 
-            const response = await fetch(`https://api-ssl.bitly.com/v4/shorten`, {
+            const response = await fetch(`https://n9.cl/en/api`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer 541492ac61a2782915cb75f4faaedf8b4a083bdd',
+                    'Authorization': 'Bearer c8dcb7591d788d183fd17612053e2f5a00357e35',
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     'long_url': originalUrl,
-                    'domain': 'bit.ly'
+                    'domain': 'n9.cl'
                 })
             });
 
