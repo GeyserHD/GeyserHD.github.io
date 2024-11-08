@@ -362,7 +362,7 @@ function addAccordionEventListeners() {
 
             const originalUrl = document.getElementById('game-enlace-bitly').value;
 
-            const response = await fetch(`https://n9.cl/en/api`, {
+            const response = await fetch(`https://n9.cl/api/v1/shorten`, {
                 method: 'POST',
                 headers: {
                     'Authorization': 'Bearer c8dcb7591d788d183fd17612053e2f5a00357e35',
