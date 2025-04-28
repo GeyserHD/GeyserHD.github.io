@@ -238,7 +238,7 @@
     </div>
 
     <script>
-        // TMDB API Key - Reemplaza con tu propia API Key
+        // TMDB API Key - Se ha actualizado con la API key proporcionada
         const TMDB_API_KEY = 'e729363acbddf1091e6f7de1ecbc1dc9';
         
         // Theme Toggle
@@ -299,6 +299,11 @@
             
             try {
                 const response = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=es`);
+                
+                if (!response.ok) {
+                    throw new Error(`Error de API: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 
                 const resultsContainer = document.getElementById('tmdbResults');
@@ -328,7 +333,7 @@
                 }
             } catch (error) {
                 console.error('Error searching TMDB:', error);
-                alert('Error al buscar en TMDB. Verifica tu conexión o intenta más tarde.');
+                alert('Error al buscar en TMDB: ' + error.message);
             } finally {
                 // Reset button state
                 searchText.textContent = 'Buscar';
@@ -341,16 +346,26 @@
             try {
                 // Fetch movie details
                 const movieResponse = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${TMDB_API_KEY}&language=es`);
+                
+                if (!movieResponse.ok) {
+                    throw new Error(`Error al obtener detalles de la película: ${movieResponse.status}`);
+                }
+                
                 const movieData = await movieResponse.json();
                 
                 // Fetch credits to get production countries
                 const creditsResponse = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${TMDB_API_KEY}`);
+                
+                if (!creditsResponse.ok) {
+                    console.warn('No se pudieron obtener los créditos de la película');
+                }
+                
                 const creditsData = await creditsResponse.json();
                 
                 // Fill the form
-                document.getElementById('movieTitle').value = movieData.title;
+                document.getElementById('movieTitle').value = movieData.title || '';
                 document.getElementById('movieYear').value = movieData.release_date ? movieData.release_date.substring(0, 4) : '';
-                document.getElementById('movieOriginalTitle').value = movieData.original_title;
+                document.getElementById('movieOriginalTitle').value = movieData.original_title || movieData.title || '';
                 
                 // Get production countries
                 const countries = movieData.production_countries.map(c => c.name).join(', ');
@@ -398,7 +413,7 @@
         }
         
         function renderHistory() {
-            const history = JSON.parse(localStorage.getItem('movieHistory') || [];
+            const history = JSON.parse(localStorage.getItem('movieHistory') || '[]');
             const historyList = document.getElementById('historyList');
             
             if (history.length === 0) {
@@ -426,12 +441,17 @@
         async function loadFromHistory(movieId) {
             try {
                 const movieResponse = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${TMDB_API_KEY}&language=es`);
+                
+                if (!movieResponse.ok) {
+                    throw new Error(`Error al cargar desde historial: ${movieResponse.status}`);
+                }
+                
                 const movieData = await movieResponse.json();
                 
                 // Fill the form
-                document.getElementById('movieTitle').value = movieData.title;
+                document.getElementById('movieTitle').value = movieData.title || '';
                 document.getElementById('movieYear').value = movieData.release_date ? movieData.release_date.substring(0, 4) : '';
-                document.getElementById('movieOriginalTitle').value = movieData.original_title;
+                document.getElementById('movieOriginalTitle').value = movieData.original_title || movieData.title || '';
                 
                 // Get production countries
                 const countries = movieData.production_countries.map(c => c.name).join(', ');
@@ -478,87 +498,97 @@
             
             // Generate BBCode
             let bbcode = `[center][b]${title} (${year})[/b][/center]\n\n`;
-            bbcode += `[center]Una presentación de calidad por [b]${author}[/b] [/center]\n\n`;
-            bbcode += `[center][img]${separator}[/img][/center]\n\n`;
-            
-            if (posterUrl) {
-                bbcode += `[center][img]${posterUrl}[/img][/center]\n\n`;
-            }
-            
-            bbcode += `[center][img]${infoImg}[/img][/center]\n\n`;
-            bbcode += `[center]\n`;
-            bbcode += `[b]Sinopsis:[/b]\n`;
-            bbcode += `[i]${synopsis}[/i]\n\n`;
-            bbcode += `[hr]\n\n`;
-            bbcode += `[b]Título original:[/b] ${originalTitle}\n`;
-            bbcode += `[b]Año:[/b] ${year}\n`;
-            bbcode += `[b]Duración:[/b] ${duration}\n`;
-            bbcode += `[b]País:[/b] ${country}\n\n`;
-            bbcode += `[hr]\n\n`;
-            bbcode += `[b]Audios:[/b] ${audio}\n`;
-            bbcode += `[b]Subtítulos:[/b] ${subtitles}\n`;
-            bbcode += `[b]Calidad:[/b] ${quality}\n`;
-            bbcode += `[b]Resolución:[/b] ${resolution}\n`;
-            bbcode += `[b]Formato:[/b] ${format}\n`;
-            bbcode += `[b]Tamaño:[/b] ${size}\n`;
-            bbcode += `[b]Códec:[/b] ${codec}\n\n`;
-            bbcode += `[/center]\n\n`;
-            
-            // Add screenshots
-            screenshots.forEach(url => {
-                bbcode += `[center][img]${url}[/img][/center]\n\n`;
-            });
-            
-            // Add download links
-            bbcode += `[center][img]${linksImg}[/img][/center]\n\n`;
-            bbcode += `[center][b] ENLACES DE DESCARGA:[/b][/center]\n\n`;
-            bbcode += `[center][links]\n`;
-            downloadLinks.forEach(link => {
-                bbcode += `${link}\n`;
-            });
-            bbcode += `[/links][/center]\n\n`;
-            bbcode += `[center][img]${separator}[/img][/center]\n\n`;
-            bbcode += `[center][b] Publicación creada con estilo por ${author} – ¡Disfrútala! [/b][/center]`;
-            
-            // Display preview
-            const preview = document.getElementById('bbcodePreview');
-            preview.innerHTML = bbcode
-                .replace(/\[center\]/g, '<div style="text-align: center;">')
-                .replace(/\[\/center\]/g, '</div>')
-                .replace(/\[b\]/g, '<strong>')
-                .replace(/\[\/b\]/g, '</strong>')
-                .replace(/\[i\]/g, '<em>')
-                .replace(/\[\/i\]/g, '</em>')
-                .replace(/\[hr\]/g, '<hr class="my-3 border-gray-300 dark:border-gray-600">')
-                .replace(/\[img\](\S+)\[\/img\]/g, '<img src="$1" style="max-width: 100%; height: auto; display: block; margin: 0 auto;">')
-                .replace(/\[links\]/g, '<div style="background: #f0f0f0; padding: 10px; border-radius: 5px; margin: 10px 0; text-align: left; display: inline-block; min-width: 50%;">')
-                .replace(/\[\/links\]/g, '</div>')
-                .replace(/\n/g, '<br>');
-            
-            // Store BBCode for copying
-            preview.dataset.bbcode = bbcode;
-        }
-        
-        // Copy BBCode
-        document.getElementById('copyBtn').addEventListener('click', () => {
-            const bbcode = document.getElementById('bbcodePreview').dataset.bbcode;
-            if (!bbcode) return;
-            
-            navigator.clipboard.writeText(bbcode).then(() => {
+            bbcode += `[center]Una presentación de calidad por [b]${author}[/b][/center]\n\n`;
+
+if (posterUrl) {
+    bbcode += `[center][img]${posterUrl}[/img][/center]\n\n`;
+}
+
+// Separador
+bbcode += `[center][img]${separator}[/img][/center]\n\n`;
+
+// Sección de información
+bbcode += `[center][img]${infoImg}[/img][/center]\n\n`;
+bbcode += `[b]Título original:[/b] ${originalTitle}\n`;
+bbcode += `[b]País:[/b] ${country}\n`;
+bbcode += `[b]Duración:[/b] ${duration}\n`;
+bbcode += `[b]Sinopsis:[/b] ${synopsis}\n\n`;
+
+// Datos técnicos
+bbcode += `[b]Calidad:[/b] ${quality}\n`;
+bbcode += `[b]Formato:[/b] ${format}\n`;
+bbcode += `[b]Tamaño:[/b] ${size}\n`;
+bbcode += `[b]Resolución:[/b] ${resolution}\n`;
+bbcode += `[b]Códec:[/b] ${codec}\n`;
+bbcode += `[b]Audio:[/b] ${audio}\n`;
+bbcode += `[b]Subtítulos:[/b] ${subtitles}\n\n`;
+
+// Separador
+bbcode += `[center][img]${separator}[/img][/center]\n\n`;
+
+// Enlaces de descarga
+bbcode += `[center][img]${linksImg}[/img][/center]\n\n`;
+if (downloadLinks.length > 0) {
+    downloadLinks.forEach(link => {
+        bbcode += `${link}\n`;
+    });
+} else {
+    bbcode += 'No se han especificado enlaces de descarga.';
+}
+bbcode += '\n\n';
+
+// Capturas
+bbcode += `[center][b]CAPTURAS[/b][/center]\n\n`;
+if (screenshots.length > 0) {
+    screenshots.forEach(screenshot => {
+        bbcode += `[center][img]${screenshot}[/img][/center]\n\n`;
+    });
+} else {
+    bbcode += 'No se han especificado capturas de pantalla.';
+}
+
+// Final
+bbcode += `[center][img]${separator}[/img][/center]\n`;
+bbcode += `[center]¡Gracias por descargar! - Post generado por ${author}[/center]`;
+
+// Display BBCode
+const previewElement = document.getElementById('bbcodePreview');
+// Display the code with styling
+previewElement.innerHTML = `<pre class="whitespace-pre-wrap text-gray-800 dark:text-gray-200">${bbcode.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>`;
+
+// Attempt to render a preview of the poster
+if (posterUrl) {
+    const imgPreview = document.createElement('div');
+    imgPreview.className = 'my-4 text-center';
+    imgPreview.innerHTML = `<img src="${posterUrl}" alt="Movie Poster" style="max-height: 300px; margin: 0 auto;">`;
+    previewElement.insertBefore(imgPreview, previewElement.firstChild);
+}
+}
+
+// Copy to Clipboard
+document.getElementById('copyBtn').addEventListener('click', () => {
+    const bbcodePreview = document.getElementById('bbcodePreview');
+    const preElement = bbcodePreview.querySelector('pre');
+    
+    if (preElement) {
+        navigator.clipboard.writeText(preElement.textContent)
+            .then(() => {
                 const copyBtn = document.getElementById('copyBtn');
                 const originalText = copyBtn.innerHTML;
-                copyBtn.innerHTML = '<i class="fas fa-check mr-1"></i>Copiado!';
+                copyBtn.innerHTML = '<i class="fas fa-check mr-1"></i>Copiado';
                 setTimeout(() => {
                     copyBtn.innerHTML = originalText;
                 }, 2000);
-            }).catch(err => {
-                console.error('Error copying text: ', err);
-                alert('Error al copiar el código. Intenta manualmente.');
+            })
+            .catch(err => {
+                console.error('Error al copiar:', err);
+                alert('No se pudo copiar al portapapeles');
             });
-        });
-        
-        // Initialize history on load
-        renderHistory();
-    </script>
+    }
+});
+
+// Load history on startup
+renderHistory();
+</script>
 </body>
 </html>
