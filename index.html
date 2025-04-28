@@ -1,173 +1,485 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Generador de Post para Películas</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Posts para Películas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .container { display: flex; flex-direction: column; gap: 15px; }
-        .group { border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, textarea, select { width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; }
-        button { padding: 10px 15px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
-        #preview { border: 1px solid #ddd; padding: 15px; background-color: #f9f9f9; }
-        #bbcode { width: 100%; height: 200px; }
-        .two-columns { display: flex; gap: 15px; }
-        .two-columns > div { flex: 1; }
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .bbcode-preview img {
+            max-width: 100%;
+            height: auto;
+        }
+        .history-item:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .dark .history-item:hover {
+            background-color: rgba(0,0,0,0.1);
+        }
     </style>
 </head>
-<body>
-    <h1>Generador de Post para Películas</h1>
-    
-    <div class="container">
-        <div class="group">
-            <h2>Información Básica</h2>
-            <div class="two-columns">
-                <div>
-                    <label for="tmdbUrl">URL de TMDB (opcional):</label>
-                    <input type="text" id="tmdbUrl" placeholder="https://www.themoviedb.org/movie/...">
-                    <button id="fetchBtn">Buscar en TMDB</button>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">
+                <i class="fas fa-film mr-2"></i> Generador de Posts
+            </h1>
+            <div class="flex items-center space-x-4">
+                <button id="themeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:inline"></i>
+                </button>
+                <button id="clearForm" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+                    <i class="fas fa-trash mr-2"></i>Limpiar
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Form Section -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- TMDB Search -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+                        <i class="fas fa-search mr-2"></i>Búsqueda en TMDB
+                    </h2>
+                    <div class="flex space-x-2">
+                        <input type="text" id="tmdbSearch" placeholder="Buscar película en TMDB..." 
+                            class="flex-1 px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <button id="tmdbSearchBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center">
+                            <span id="searchText">Buscar</span>
+                            <span id="searchLoading" class="loading-spinner ml-2 hidden"></span>
+                        </button>
+                    </div>
+                    <div id="tmdbResults" class="mt-4 hidden">
+                        <h3 class="font-medium text-gray-700 dark:text-gray-300 mb-2">Resultados:</h3>
+                        <div id="tmdbResultsList" class="space-y-2 max-h-60 overflow-y-auto"></div>
+                    </div>
                 </div>
-                <div>
-                    <label for="posterUrl">URL del Póster (TMDB):</label>
-                    <input type="text" id="posterUrl" placeholder="https://image.tmdb.org/t/p/original/...">
+
+                <!-- Movie Info -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+                        <i class="fas fa-info-circle mr-2"></i>Información de la Película
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título</label>
+                            <input type="text" id="movieTitle" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Año</label>
+                            <input type="number" id="movieYear" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título original</label>
+                            <input type="text" id="movieOriginalTitle" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">País</label>
+                            <input type="text" id="movieCountry" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duración (min)</label>
+                            <input type="text" id="movieDuration" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL Poster (TMDB)</label>
+                            <input type="text" id="moviePoster" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sinopsis</label>
+                            <textarea id="movieSynopsis" rows="3" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Info -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+                        <i class="fas fa-cogs mr-2"></i>Datos Técnicos
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Audios</label>
+                            <input type="text" id="techAudio" placeholder="Ej: Latino E-AC3 5.1 – Ingles E-AC3 5.1" 
+                                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subtítulos</label>
+                            <input type="text" id="techSubtitles" placeholder="Ej: Español" 
+                                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Calidad</label>
+                            <input type="text" id="techQuality" placeholder="Ej: 1080p" 
+                                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Resolución</label>
+                            <input type="text" id="techResolution" placeholder="Ej: 1920×1080" 
+                                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Formato</label>
+                            <input type="text" id="techFormat" placeholder="Ej: MKV" 
+                                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tamaño</label>
+                            <input type="text" id="techSize" placeholder="Ej: 2.87 Gb" 
+                                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Códec</label>
+                            <input type="text" id="techCodec" placeholder="Ej: H.264" 
+                                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Media & Links -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+                        <i class="fas fa-link mr-2"></i>Enlaces y Capturas
+                    </h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Enlaces de descarga (uno por línea)</label>
+                            <textarea id="downloadLinks" rows="3" placeholder="Ej: MEGA: https://mega.nz/file/..." 
+                                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URLs de capturas (una por línea)</label>
+                            <textarea id="screenshots" rows="3" placeholder="Ej: https://iili.io/3uuS37e.png" 
+                                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customization -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+                        <i class="fas fa-paint-brush mr-2"></i>Personalización
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Autor/Publicador</label>
+                            <input type="text" id="customAuthor" value="YeiEi" 
+                                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL Separador</label>
+                            <input type="text" id="customSeparator" value="https://www.identi.io/imgpost/Separadori.png" 
+                                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL Imagen Info</label>
+                            <input type="text" id="customInfoImg" value="https://www.identi.io/imgpost/info1.png" 
+                                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL Imagen Links</label>
+                            <input type="text" id="customLinksImg" value="https://www.identi.io/imgpost/links1.png" 
+                                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generate Button -->
+                <div class="flex justify-center">
+                    <button id="generateBtn" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold">
+                        <i class="fas fa-code mr-2"></i>Generar BBCode
+                    </button>
                 </div>
             </div>
-            
-            <label for="titulo">Título de la película:</label>
-            <input type="text" id="titulo" placeholder="Ej: George de la Selva">
-            
-            <label for="anio">Año:</label>
-            <input type="number" id="anio" placeholder="Ej: 1997">
-            
-            <label for="tituloOriginal">Título original:</label>
-            <input type="text" id="tituloOriginal" placeholder="Ej: George of the Jungle">
-            
-            <label for="pais">País:</label>
-            <input type="text" id="pais" placeholder="Ej: Estados Unidos">
-            
-            <label for="duracion">Duración (minutos):</label>
-            <input type="text" id="duracion" placeholder="Ej: 92 min">
-            
-            <label for="sinopsis">Sinopsis:</label>
-            <textarea id="sinopsis" rows="4"></textarea>
-        </div>
-        
-        <div class="group">
-            <h2>Datos Técnicos</h2>
-            <div class="two-columns">
-                <div>
-                    <label for="audios">Audios:</label>
-                    <input type="text" id="audios" placeholder="Ej: Latino E-AC3 5.1 – Ingles E-AC3 5.1">
-                    
-                    <label for="subtitulos">Subtítulos:</label>
-                    <input type="text" id="subtitulos" placeholder="Ej: Español">
-                    
-                    <label for="calidad">Calidad:</label>
-                    <input type="text" id="calidad" placeholder="Ej: 1080p">
+
+            <!-- Preview & History Section -->
+            <div class="space-y-6">
+                <!-- BBCode Preview -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800 dark:text-white">
+                            <i class="fas fa-eye mr-2"></i>Vista Previa
+                        </h2>
+                        <button id="copyBtn" class="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition">
+                            <i class="fas fa-copy mr-1"></i>Copiar
+                        </button>
+                    </div>
+                    <div id="bbcodePreview" class="bbcode-preview bg-gray-50 dark:bg-gray-700 p-4 rounded-lg overflow-y-auto max-h-96">
+                        <p class="text-gray-500 dark:text-gray-400 text-center py-8">El BBCode generado aparecerá aquí</p>
+                    </div>
                 </div>
-                <div>
-                    <label for="resolucion">Resolución:</label>
-                    <input type="text" id="resolucion" placeholder="Ej: 1920×1080">
-                    
-                    <label for="formato">Formato:</label>
-                    <input type="text" id="formato" placeholder="Ej: MKV">
-                    
-                    <label for="tamano">Tamaño:</label>
-                    <input type="text" id="tamano" placeholder="Ej: 2.87 Gb">
-                    
-                    <label for="codec">Códec:</label>
-                    <input type="text" id="codec" placeholder="Ej: H.264">
+
+                <!-- History -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
+                        <i class="fas fa-history mr-2"></i>Historial
+                    </h2>
+                    <div id="historyList" class="space-y-2 max-h-64 overflow-y-auto">
+                        <p class="text-gray-500 dark:text-gray-400 text-center py-4">No hay historial reciente</p>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="group">
-            <h2>Enlaces y Capturas</h2>
-            <label for="enlaces">Enlaces de descarga (uno por línea, formato "SERVICIO: URL"):</label>
-            <textarea id="enlaces" rows="4" placeholder="Ej: MEGA: https://mega.nz/file/..."></textarea>
-            
-            <label for="capturas">URLs de capturas (una por línea):</label>
-            <textarea id="capturas" rows="4" placeholder="Ej: https://iili.io/3uuS37e.png"></textarea>
-        </div>
-        
-        <div class="group">
-            <h2>Personalización</h2>
-            <label for="autor">Nombre del autor/publicador:</label>
-            <input type="text" id="autor" value="YeiEi">
-            
-            <label for="separador">URL del separador:</label>
-            <input type="text" id="separador" value="https://www.identi.io/imgpost/Separadori.png">
-            
-            <label for="infoImg">URL de la imagen de info:</label>
-            <input type="text" id="infoImg" value="https://www.identi.io/imgpost/info1.png">
-            
-            <label for="linksImg">URL de la imagen de links:</label>
-            <input type="text" id="linksImg" value="https://www.identi.io/imgpost/links1.png">
-        </div>
-        
-        <button id="generateBtn">Generar Código BBcode</button>
     </div>
-    
-    <h2>Vista Previa:</h2>
-    <div id="preview"></div>
-    
-    <h2>Código BBcode Generado:</h2>
-    <textarea id="bbcode" readonly></textarea>
-    
+
     <script>
-        document.getElementById('generateBtn').addEventListener('click', generateBBcode);
-        document.getElementById('fetchBtn').addEventListener('click', fetchTMDB);
+        // TMDB API Key - Reemplaza con tu propia API Key
+        const TMDB_API_KEY = 'e729363acbddf1091e6f7de1ecbc1dc9';
         
-        function fetchTMDB() {
-            const tmdbUrl = document.getElementById('tmdbUrl').value;
-            if (!tmdbUrl) return;
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        // Check for saved theme preference or use preferred color scheme
+        if (localStorage.getItem('theme') === 'dark' || 
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+        });
+        
+        // Clear Form
+        document.getElementById('clearForm').addEventListener('click', () => {
+            if (confirm('¿Estás seguro de que quieres limpiar todo el formulario?')) {
+                document.querySelectorAll('input, textarea').forEach(el => {
+                    if (el.id !== 'customAuthor' && el.id !== 'customSeparator' && 
+                        el.id !== 'customInfoImg' && el.id !== 'customLinksImg') {
+                        el.value = '';
+                    } else if (el.id === 'customAuthor') {
+                        el.value = 'YeiEi';
+                    } else if (el.id === 'customSeparator') {
+                        el.value = 'https://www.identi.io/imgpost/Separadori.png';
+                    } else if (el.id === 'customInfoImg') {
+                        el.value = 'https://www.identi.io/imgpost/info1.png';
+                    } else if (el.id === 'customLinksImg') {
+                        el.value = 'https://www.identi.io/imgpost/links1.png';
+                    }
+                });
+                document.getElementById('bbcodePreview').innerHTML = 
+                    '<p class="text-gray-500 dark:text-gray-400 text-center py-8">El BBCode generado aparecerá aquí</p>';
+            }
+        });
+        
+        // TMDB Search
+        document.getElementById('tmdbSearchBtn').addEventListener('click', searchTMDB);
+        document.getElementById('tmdbSearch').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchTMDB();
+        });
+        
+        async function searchTMDB() {
+            const query = document.getElementById('tmdbSearch').value.trim();
+            if (!query) return;
             
-            // Extraer el ID de la película de la URL
-            const match = tmdbUrl.match(/movie\/(\d+)/);
-            if (!match) {
-                alert('URL de TMDB no válida');
+            const searchBtn = document.getElementById('tmdbSearchBtn');
+            const searchText = document.getElementById('searchText');
+            const searchLoading = document.getElementById('searchLoading');
+            
+            // Show loading state
+            searchText.textContent = 'Buscando...';
+            searchLoading.classList.remove('hidden');
+            searchBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=es`);
+                const data = await response.json();
+                
+                const resultsContainer = document.getElementById('tmdbResults');
+                const resultsList = document.getElementById('tmdbResultsList');
+                
+                resultsList.innerHTML = '';
+                
+                if (data.results && data.results.length > 0) {
+                    data.results.forEach(movie => {
+                        const movieCard = document.createElement('div');
+                        movieCard.className = 'p-3 border rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center';
+                        movieCard.innerHTML = `
+                            <img src="${movie.poster_path ? `https://image.tmdb.org/t/p/w92${movie.poster_path}` : 'https://via.placeholder.com/92x138?text=No+Poster'}" 
+                                alt="${movie.title}" class="w-12 h-16 object-cover rounded mr-3">
+                            <div>
+                                <div class="font-medium dark:text-white">${movie.title} (${movie.release_date ? movie.release_date.substring(0, 4) : '?'})</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400 truncate">${movie.overview || 'Sin sinopsis disponible'}</div>
+                            </div>
+                        `;
+                        movieCard.addEventListener('click', () => selectMovieFromTMDB(movie.id));
+                        resultsList.appendChild(movieCard);
+                    });
+                    resultsContainer.classList.remove('hidden');
+                } else {
+                    resultsList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-4">No se encontraron resultados</p>';
+                    resultsContainer.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error searching TMDB:', error);
+                alert('Error al buscar en TMDB. Verifica tu conexión o intenta más tarde.');
+            } finally {
+                // Reset button state
+                searchText.textContent = 'Buscar';
+                searchLoading.classList.add('hidden');
+                searchBtn.disabled = false;
+            }
+        }
+        
+        async function selectMovieFromTMDB(movieId) {
+            try {
+                // Fetch movie details
+                const movieResponse = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${TMDB_API_KEY}&language=es`);
+                const movieData = await movieResponse.json();
+                
+                // Fetch credits to get production countries
+                const creditsResponse = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${TMDB_API_KEY}`);
+                const creditsData = await creditsResponse.json();
+                
+                // Fill the form
+                document.getElementById('movieTitle').value = movieData.title;
+                document.getElementById('movieYear').value = movieData.release_date ? movieData.release_date.substring(0, 4) : '';
+                document.getElementById('movieOriginalTitle').value = movieData.original_title;
+                
+                // Get production countries
+                const countries = movieData.production_countries.map(c => c.name).join(', ');
+                document.getElementById('movieCountry').value = countries;
+                
+                document.getElementById('movieDuration').value = movieData.runtime ? `${movieData.runtime} min` : '';
+                document.getElementById('moviePoster').value = movieData.poster_path ? `https://image.tmdb.org/t/p/original${movieData.poster_path}` : '';
+                document.getElementById('movieSynopsis').value = movieData.overview || '';
+                
+                // Add to history
+                addToHistory({
+                    id: movieData.id,
+                    title: movieData.title,
+                    year: movieData.release_date ? movieData.release_date.substring(0, 4) : '',
+                    poster: movieData.poster_path ? `https://image.tmdb.org/t/p/w92${movieData.poster_path}` : null
+                });
+                
+                // Hide results
+                document.getElementById('tmdbResults').classList.add('hidden');
+                document.getElementById('tmdbSearch').value = '';
+                
+            } catch (error) {
+                console.error('Error fetching movie details:', error);
+                alert('Error al obtener detalles de la película. Intenta nuevamente.');
+            }
+        }
+        
+        // History functionality
+        function addToHistory(movie) {
+            let history = JSON.parse(localStorage.getItem('movieHistory') || '[]');
+            
+            // Remove if already exists
+            history = history.filter(item => item.id !== movie.id);
+            
+            // Add to beginning
+            history.unshift(movie);
+            
+            // Keep only last 10 items
+            if (history.length > 10) {
+                history = history.slice(0, 10);
+            }
+            
+            localStorage.setItem('movieHistory', JSON.stringify(history));
+            renderHistory();
+        }
+        
+        function renderHistory() {
+            const history = JSON.parse(localStorage.getItem('movieHistory') || [];
+            const historyList = document.getElementById('historyList');
+            
+            if (history.length === 0) {
+                historyList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-4">No hay historial reciente</p>';
                 return;
             }
             
-            const movieId = match[1];
-            const apiKey = 'e729363acbddf1091e6f7de1ecbc1dc9'; // Necesitarías una API key de TMDB
-            
-            // En una implementación real, harías una llamada a la API de TMDB aquí
-            alert('En una implementación real, esto buscaría la información de la película en TMDB. Necesitarías una API key.');
+            historyList.innerHTML = '';
+            history.forEach(movie => {
+                const item = document.createElement('div');
+                item.className = 'history-item p-2 rounded-lg cursor-pointer flex items-center';
+                item.innerHTML = `
+                    <img src="${movie.poster || 'https://via.placeholder.com/46x69?text=No+Poster'}" 
+                        alt="${movie.title}" class="w-10 h-14 object-cover rounded mr-3">
+                    <div>
+                        <div class="font-medium dark:text-white">${movie.title}</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">${movie.year || '?'}</div>
+                    </div>
+                `;
+                item.addEventListener('click', () => loadFromHistory(movie.id));
+                historyList.appendChild(item);
+            });
         }
         
-        function generateBBcode() {
-            const titulo = document.getElementById('titulo').value || 'Título no especificado';
-            const anio = document.getElementById('anio').value || 'Año no especificado';
-            const tituloOriginal = document.getElementById('tituloOriginal').value || 'Título original no especificado';
-            const pais = document.getElementById('pais').value || 'País no especificado';
-            const duracion = document.getElementById('duracion').value || 'Duración no especificada';
-            const sinopsis = document.getElementById('sinopsis').value || 'Sinopsis no disponible.';
+        async function loadFromHistory(movieId) {
+            try {
+                const movieResponse = await fetch(`https://api.themoviedb.org/3/movie/${movieId}?api_key=${TMDB_API_KEY}&language=es`);
+                const movieData = await movieResponse.json();
+                
+                // Fill the form
+                document.getElementById('movieTitle').value = movieData.title;
+                document.getElementById('movieYear').value = movieData.release_date ? movieData.release_date.substring(0, 4) : '';
+                document.getElementById('movieOriginalTitle').value = movieData.original_title;
+                
+                // Get production countries
+                const countries = movieData.production_countries.map(c => c.name).join(', ');
+                document.getElementById('movieCountry').value = countries;
+                
+                document.getElementById('movieDuration').value = movieData.runtime ? `${movieData.runtime} min` : '';
+                document.getElementById('moviePoster').value = movieData.poster_path ? `https://image.tmdb.org/t/p/original${movieData.poster_path}` : '';
+                document.getElementById('movieSynopsis').value = movieData.overview || '';
+                
+            } catch (error) {
+                console.error('Error loading from history:', error);
+                alert('Error al cargar película del historial. Intenta nuevamente.');
+            }
+        }
+        
+        // Generate BBCode
+        document.getElementById('generateBtn').addEventListener('click', generateBBCode);
+        
+        function generateBBCode() {
+            // Get all values
+            const title = document.getElementById('movieTitle').value || 'Título no especificado';
+            const year = document.getElementById('movieYear').value || 'Año no especificado';
+            const originalTitle = document.getElementById('movieOriginalTitle').value || title;
+            const country = document.getElementById('movieCountry').value || 'País no especificado';
+            const duration = document.getElementById('movieDuration').value || 'Duración no especificada';
+            const posterUrl = document.getElementById('moviePoster').value;
+            const synopsis = document.getElementById('movieSynopsis').value || 'Sinopsis no disponible.';
             
-            const audios = document.getElementById('audios').value || 'Audio no especificado';
-            const subtitulos = document.getElementById('subtitulos').value || 'Subtítulos no especificados';
-            const calidad = document.getElementById('calidad').value || 'Calidad no especificada';
-            const resolucion = document.getElementById('resolucion').value || 'Resolución no especificada';
-            const formato = document.getElementById('formato').value || 'Formato no especificado';
-            const tamano = document.getElementById('tamano').value || 'Tamaño no especificado';
-            const codec = document.getElementById('codec').value || 'Códec no especificado';
+            const audio = document.getElementById('techAudio').value || 'Audio no especificado';
+            const subtitles = document.getElementById('techSubtitles').value || 'Subtítulos no especificados';
+            const quality = document.getElementById('techQuality').value || 'Calidad no especificada';
+            const resolution = document.getElementById('techResolution').value || 'Resolución no especificada';
+            const format = document.getElementById('techFormat').value || 'Formato no especificado';
+            const size = document.getElementById('techSize').value || 'Tamaño no especificado';
+            const codec = document.getElementById('techCodec').value || 'Códec no especificado';
             
-            const enlacesText = document.getElementById('enlaces').value;
-            const enlaces = enlacesText.split('\n').filter(line => line.trim());
+            const downloadLinks = document.getElementById('downloadLinks').value.split('\n').filter(line => line.trim());
+            const screenshots = document.getElementById('screenshots').value.split('\n').filter(line => line.trim());
             
-            const capturasText = document.getElementById('capturas').value;
-            const capturas = capturasText.split('\n').filter(line => line.trim());
+            const author = document.getElementById('customAuthor').value || 'Autor no especificado';
+            const separator = document.getElementById('customSeparator').value;
+            const infoImg = document.getElementById('customInfoImg').value;
+            const linksImg = document.getElementById('customLinksImg').value;
             
-            const autor = document.getElementById('autor').value || 'Autor no especificado';
-            const separador = document.getElementById('separador').value;
-            const infoImg = document.getElementById('infoImg').value;
-            const linksImg = document.getElementById('linksImg').value;
-            const posterUrl = document.getElementById('posterUrl').value;
-            
-            // Generar el BBcode
-            let bbcode = `[center][b]${titulo} (${anio})[/b][/center]\n\n`;
-            bbcode += `[center]Una presentación de calidad por [b]${autor}[/b] [/center]\n\n`;
-            bbcode += `[center][img]${separador}[/img][/center]\n\n`;
+            // Generate BBCode
+            let bbcode = `[center][b]${title} (${year})[/b][/center]\n\n`;
+            bbcode += `[center]Una presentación de calidad por [b]${author}[/b] [/center]\n\n`;
+            bbcode += `[center][img]${separator}[/img][/center]\n\n`;
             
             if (posterUrl) {
                 bbcode += `[center][img]${posterUrl}[/img][/center]\n\n`;
@@ -176,53 +488,77 @@
             bbcode += `[center][img]${infoImg}[/img][/center]\n\n`;
             bbcode += `[center]\n`;
             bbcode += `[b]Sinopsis:[/b]\n`;
-            bbcode += `[i]${sinopsis}[/i]\n\n`;
+            bbcode += `[i]${synopsis}[/i]\n\n`;
             bbcode += `[hr]\n\n`;
-            bbcode += `[b]Título original:[/b] ${tituloOriginal}\n`;
-            bbcode += `[b]Año:[/b] ${anio}\n`;
-            bbcode += `[b]Duración:[/b] ${duracion}\n`;
-            bbcode += `[b]País:[/b] ${pais}\n\n`;
+            bbcode += `[b]Título original:[/b] ${originalTitle}\n`;
+            bbcode += `[b]Año:[/b] ${year}\n`;
+            bbcode += `[b]Duración:[/b] ${duration}\n`;
+            bbcode += `[b]País:[/b] ${country}\n\n`;
             bbcode += `[hr]\n\n`;
-            bbcode += `[b]Audios:[/b] ${audios}\n`;
-            bbcode += `[b]Subtítulos:[/b] ${subtitulos}\n`;
-            bbcode += `[b]Calidad:[/b] ${calidad}\n`;
-            bbcode += `[b]Resolución:[/b] ${resolucion}\n`;
-            bbcode += `[b]Formato:[/b] ${formato}\n`;
-            bbcode += `[b]Tamaño:[/b] ${tamano}\n`;
+            bbcode += `[b]Audios:[/b] ${audio}\n`;
+            bbcode += `[b]Subtítulos:[/b] ${subtitles}\n`;
+            bbcode += `[b]Calidad:[/b] ${quality}\n`;
+            bbcode += `[b]Resolución:[/b] ${resolution}\n`;
+            bbcode += `[b]Formato:[/b] ${format}\n`;
+            bbcode += `[b]Tamaño:[/b] ${size}\n`;
             bbcode += `[b]Códec:[/b] ${codec}\n\n`;
             bbcode += `[/center]\n\n`;
             
-            // Añadir capturas
-            capturas.forEach(captura => {
-                bbcode += `[center][img]${captura}[/img][/center]\n\n`;
+            // Add screenshots
+            screenshots.forEach(url => {
+                bbcode += `[center][img]${url}[/img][/center]\n\n`;
             });
             
-            // Añadir enlaces
+            // Add download links
             bbcode += `[center][img]${linksImg}[/img][/center]\n\n`;
             bbcode += `[center][b] ENLACES DE DESCARGA:[/b][/center]\n\n`;
             bbcode += `[center][links]\n`;
-            enlaces.forEach(enlace => {
-                bbcode += `${enlace}\n`;
+            downloadLinks.forEach(link => {
+                bbcode += `${link}\n`;
             });
             bbcode += `[/links][/center]\n\n`;
-            bbcode += `[center][img]${separador}[/img][/center]\n\n`;
-            bbcode += `[center][b] Publicación creada con estilo por ${autor} – ¡Disfrútala! [/b][/center]`;
+            bbcode += `[center][img]${separator}[/img][/center]\n\n`;
+            bbcode += `[center][b] Publicación creada con estilo por ${author} – ¡Disfrútala! [/b][/center]`;
             
-            // Mostrar el resultado
-            document.getElementById('bbcode').value = bbcode;
-            document.getElementById('preview').innerHTML = bbcode
+            // Display preview
+            const preview = document.getElementById('bbcodePreview');
+            preview.innerHTML = bbcode
                 .replace(/\[center\]/g, '<div style="text-align: center;">')
                 .replace(/\[\/center\]/g, '</div>')
                 .replace(/\[b\]/g, '<strong>')
                 .replace(/\[\/b\]/g, '</strong>')
                 .replace(/\[i\]/g, '<em>')
                 .replace(/\[\/i\]/g, '</em>')
-                .replace(/\[hr\]/g, '<hr>')
-                .replace(/\[img\](\S+)\[\/img\]/g, '<img src="$1" style="max-width: 100%;">')
-                .replace(/\[links\]/g, '<div style="background: #f0f0f0; padding: 10px; border-radius: 5px; margin: 10px 0;">')
+                .replace(/\[hr\]/g, '<hr class="my-3 border-gray-300 dark:border-gray-600">')
+                .replace(/\[img\](\S+)\[\/img\]/g, '<img src="$1" style="max-width: 100%; height: auto; display: block; margin: 0 auto;">')
+                .replace(/\[links\]/g, '<div style="background: #f0f0f0; padding: 10px; border-radius: 5px; margin: 10px 0; text-align: left; display: inline-block; min-width: 50%;">')
                 .replace(/\[\/links\]/g, '</div>')
                 .replace(/\n/g, '<br>');
+            
+            // Store BBCode for copying
+            preview.dataset.bbcode = bbcode;
         }
+        
+        // Copy BBCode
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const bbcode = document.getElementById('bbcodePreview').dataset.bbcode;
+            if (!bbcode) return;
+            
+            navigator.clipboard.writeText(bbcode).then(() => {
+                const copyBtn = document.getElementById('copyBtn');
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check mr-1"></i>Copiado!';
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Error copying text: ', err);
+                alert('Error al copiar el código. Intenta manualmente.');
+            });
+        });
+        
+        // Initialize history on load
+        renderHistory();
     </script>
 </body>
 </html>
