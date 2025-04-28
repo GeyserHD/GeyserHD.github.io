@@ -527,16 +527,17 @@ bbcode += `[b]Subtítulos:[/b] ${subtitles}\n\n`;
 bbcode += `[center][img]${separator}[/img][/center]\n\n`;
 
 // Enlaces de descarga
-bbcode += `[center][img]${linksImg}[/img][/center]\n\n`;
+bbcode += [center][img]${linksImg}[/img][/center]\n\n;
 if (downloadLinks.length > 0) {
+    bbcode += [center][links]\n;
     downloadLinks.forEach(link => {
-        bbcode += `${link}\n`;
+        bbcode += ${link}\n;
     });
+    bbcode += [/links][/center]\n\n;
 } else {
     bbcode += 'No se han especificado enlaces de descarga.';
 }
 bbcode += '\n\n';
-
 // Capturas
 bbcode += `[center][b]CAPTURAS[/b][/center]\n\n`;
 if (screenshots.length > 0) {
